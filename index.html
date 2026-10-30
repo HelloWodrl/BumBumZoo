@@ -115,8 +115,8 @@ button:focus-visible,input:focus-visible{outline:4px dashed var(--ink);outline-o
   padding-right:max(16px,env(safe-area-inset-right,0px));
   display:flex;flex-direction:column;gap:12px;
 }
-.hud-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.hud-row.tools{justify-content:flex-end}
+.hud-row{display:flex;align-items:stretch;gap:12px}
+.hud-row > *{flex:1 1 0;min-width:0;justify-content:center}
 .pill{
   background:var(--paper);box-shadow:0 0 0 3px var(--ink),4px 4px 0 3px var(--shade);
   padding:4px 12px 6px;font:700 28px var(--font-pixel);font-variant-numeric:tabular-nums;
@@ -124,7 +124,7 @@ button:focus-visible,input:focus-visible{outline:4px dashed var(--ink);outline-o
 }
 .pill small{font-size:15px;letter-spacing:1px}
 .pill.danger{background:var(--berry);color:var(--white)}
-.bar{width:clamp(60px,22vw,120px);height:14px;background:var(--white);box-shadow:0 0 0 3px var(--ink)}
+.bar{flex:1 1 auto;max-width:140px;height:14px;align-self:center;background:var(--white);box-shadow:0 0 0 3px var(--ink)}
 .bar i{display:block;height:100%;width:100%;background:var(--leaf)}
 .bar.low i{background:var(--berry)}
 .hbtn{
@@ -163,11 +163,11 @@ button:focus-visible,input:focus-visible{outline:4px dashed var(--ink);outline-o
     <div class="pill" id="escPill" hidden><small>POBJEGLI</small><span id="hudEsc">0/10</span></div>
   </div>
   <div class="hud-row tools">
+    <button class="hbtn" id="resetBtn" type="button">RESET</button>
+    <button class="hbtn" id="quitBtn" type="button">ZAVRŠI</button>
     <button class="hbtn" id="musicBtn" type="button" aria-label="Glazba" aria-pressed="true">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M1 6h3v4H1zM4 5h1v6H4zM5 4h1v8H5zM6 3h1v10H6zM7 2h1v12H7z"/><path class="waves" fill="currentColor" d="M10 6h1v4h-1zM12 4h1v8h-1zM14 2h1v12h-1z"/><path class="x" fill="currentColor" d="M10 5h1v1h-1zM14 5h1v1h-1zM11 6h1v1h-1zM13 6h1v1h-1zM12 7h1v2h-1zM11 9h1v1h-1zM13 9h1v1h-1zM10 10h1v1h-1zM14 10h1v1h-1z"/></svg>
     </button>
-    <button class="hbtn" id="resetBtn" type="button">RESET</button>
-    <button class="hbtn" id="quitBtn" type="button">ZAVRŠI</button>
   </div>
 </div>
 
@@ -225,7 +225,7 @@ button:focus-visible,input:focus-visible{outline:4px dashed var(--ink);outline-o
 'use strict';
 const $ = s => document.querySelector(s);
 const cv = $('#stage'), ctx = cv.getContext('2d');
-const GAME_SECONDS = 60, SPAWN_EVERY = 1.5, POINTS = 10, LIFE = 3.2, MAX_ESCAPES = 10;
+const GAME_SECONDS = 60, SPAWN_EVERY = 1.5, POINTS = 10, LIFE = 3.2, MAX_ESCAPES = 10, MAX_SPEED = 5, MIN_LIFE = 0.8;
 const INK = '#2a1b3d';
 
 const store = {
@@ -569,7 +569,7 @@ function spawn(){
     if (live.every(a => Math.abs(a.x - x) > b.w * 1.15 || Math.abs(a.y - y) > b.h * 1.2)) pos = [x, y];
   }
   if (!pos) return;
-  G.animals.push({ kind, x:pos[0], y:pos[1], state:'pop', st:0, age:0, life:Math.max(1.1, LIFE / G.speed), phase:Math.random()*6,
+  G.animals.push({ kind, x:pos[0], y:pos[1], state:'pop', st:0, age:0, life:Math.max(MIN_LIFE, LIFE / G.speed), phase:Math.random()*6,
     lx:Math.random()<.5?0:1, ly:1, look:.4, blink:0, nextBlink:1 + Math.random()*2 });
   sfxPop();
 }
@@ -593,7 +593,7 @@ function escaped(){
 function hit(a){
   setState(a, 'dizzy');
   G.score += POINTS; G.hits++;
-  if (G.level === 'velike') G.speed = Math.min(3, 1 + G.hits * 0.05);
+  if (G.level === 'velike') G.speed = Math.min(MAX_SPEED, 1 + G.hits * 0.05);
   sfxHit(a.kind);
   try { navigator.vibrate && navigator.vibrate(25); } catch (e) {}
   const sp = SPR[a.kind];

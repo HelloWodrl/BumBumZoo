@@ -1,6 +1,6 @@
 // Bum-bum zoo service worker: keeps the game playable offline.
 // Bump VERSION after changing any file so phones pick up the new copy.
-const VERSION = 'bbz-v2';
+const VERSION = 'bbz-v4';
 const APP_SHELL = [
   './',
   'index.html',
