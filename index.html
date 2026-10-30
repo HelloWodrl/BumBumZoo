@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap">
 <style>
-/* Layout: one full-bleed pixel canvas as the playfield; chunky ink-bordered panels float over it for menu, countdown and results. Single bright arcade look in both themes. */
+/* Layout: one full-bleed pixel canvas as the playfield; chunky ink-bordered panels float over it for menu, photo editor, countdown and results. Single bright arcade look. */
 :root{
   --ink:#2a1b3d;
   --paper:#fff4d1;
@@ -38,7 +38,7 @@ body{
 }
 #stage{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
 .screen{
-  position:fixed;inset:0;display:flex;z-index:3;overflow-y:auto;
+  position:fixed;inset:0;display:flex;z-index:3;overflow-y:auto;touch-action:pan-y;
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));
   padding-right:max(16px,env(safe-area-inset-right,0px));
@@ -46,25 +46,37 @@ body{
 .panel{
   margin:auto;width:min(100%,460px);background:var(--paper);
   box-shadow:0 0 0 4px var(--ink),8px 8px 0 4px var(--shade);
-  padding:22px 18px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;
+  padding:20px 18px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;
 }
-h1,h2{margin:0;line-height:.95;color:var(--berry);text-wrap:balance;letter-spacing:1px;
+h1,h2,h3{margin:0;line-height:.95;color:var(--berry);text-wrap:balance;letter-spacing:1px;
   text-shadow:-3px 0 var(--ink),3px 0 var(--ink),0 -3px var(--ink),0 3px var(--ink),6px 6px 0 var(--ink)}
 h1{font-size:clamp(36px,11vw,62px);white-space:nowrap;animation:bob 1.2s steps(2) infinite}
 h2{font-size:clamp(48px,14vw,72px)}
+h2.long{font-size:clamp(34px,10vw,52px)}
+h3{font-size:clamp(30px,9vw,42px)}
 @keyframes bob{50%{transform:translateY(-4px) rotate(-2deg)}}
 .lead{margin:0;font-size:22px;font-weight:700}
 .choices{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;width:100%}
 .choice{
-  appearance:none;border:0;cursor:pointer;flex:0 0 calc((100% - 24px)/3);
+  appearance:none;border:0;cursor:pointer;flex:0 0 calc((100% - 24px)/3);min-width:0;
   background:var(--white);color:var(--ink);font:700 17px var(--font-pixel);
   box-shadow:0 0 0 3px var(--ink),0 5px 0 3px var(--ink);
   padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;
 }
-.choice canvas{width:60px;height:60px;image-rendering:pixelated}
+.choice span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.choice canvas{width:56px;height:56px;image-rendering:pixelated}
+.choice canvas.smooth{image-rendering:auto}
 .choice[aria-pressed="true"]{background:var(--sun)}
 .choice[aria-pressed="true"] canvas{animation:bob .6s steps(2) infinite}
-.choice:active{transform:translateY(4px);box-shadow:0 0 0 3px var(--ink),0 1px 0 3px var(--ink)}
+.choice:active,.level:active,.hbtn:active{transform:translateY(4px)}
+.textbtn{appearance:none;border:0;background:none;cursor:pointer;color:var(--ink);font:700 17px var(--font-pixel);text-decoration:underline;text-underline-offset:4px;padding:4px 8px}
+.levels{display:flex;gap:12px;width:100%}
+.level{
+  appearance:none;border:0;cursor:pointer;flex:1 1 0;min-width:0;
+  background:var(--white);color:var(--ink);font:700 18px/1.05 var(--font-pixel);
+  box-shadow:0 0 0 3px var(--ink),0 5px 0 3px var(--ink);padding:10px 6px;
+}
+.level[aria-pressed="true"]{background:var(--leaf);color:var(--white);text-shadow:2px 2px 0 var(--ink)}
 .big{
   appearance:none;border:0;cursor:pointer;background:var(--berry);color:var(--white);
   font:700 clamp(34px,10vw,46px) var(--font-pixel);letter-spacing:3px;padding:12px 44px 14px;
@@ -74,9 +86,18 @@ h2{font-size:clamp(48px,14vw,72px)}
 .big.small{font-size:22px;letter-spacing:1px;padding:10px 18px 12px}
 .big.alt{background:var(--leaf)}
 .big:disabled{opacity:.45;transform:none}
-button:focus-visible{outline:4px dashed var(--ink);outline-offset:8px}
-.note{margin:0;font-size:17px;opacity:.8}
+button:focus-visible,input:focus-visible{outline:4px dashed var(--ink);outline-offset:6px}
+.note{margin:0;font-size:17px;opacity:.85}
 .row{display:flex;flex-wrap:wrap;gap:16px 18px;justify-content:center}
+
+/* Photo editor */
+.crop{width:min(100%,300px);aspect-ratio:1;max-width:100%;box-shadow:0 0 0 4px var(--ink);background:var(--ink);touch-action:none;display:block}
+.zoom{width:min(100%,300px);accent-color:var(--berry)}
+.field{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700}
+.field input{
+  font:700 20px var(--font-pixel);color:var(--ink);background:var(--white);border:0;width:9em;max-width:60vw;
+  box-shadow:0 0 0 3px var(--ink);padding:6px 10px;user-select:text;-webkit-user-select:text;
+}
 
 #count{align-items:center;justify-content:center;pointer-events:none;background:transparent}
 #countNum{
@@ -88,26 +109,44 @@ button:focus-visible{outline:4px dashed var(--ink);outline-offset:8px}
 @keyframes pop{from{transform:scale(.2)}to{transform:scale(1)}}
 
 #hud{
-  position:fixed;left:0;right:0;top:0;z-index:2;pointer-events:none;
+  position:fixed;left:0;right:0;top:0;z-index:4;pointer-events:none;
   padding-top:calc(env(safe-area-inset-top,0px) + 12px);
   padding-left:max(16px,env(safe-area-inset-left,0px));
   padding-right:max(16px,env(safe-area-inset-right,0px));
-  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  display:flex;flex-direction:column;gap:12px;
 }
+.hud-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hud-row.tools{justify-content:flex-end}
 .pill{
   background:var(--paper);box-shadow:0 0 0 3px var(--ink),4px 4px 0 3px var(--shade);
   padding:4px 12px 6px;font:700 28px var(--font-pixel);font-variant-numeric:tabular-nums;
   display:flex;align-items:center;gap:10px;
 }
 .pill small{font-size:15px;letter-spacing:1px}
+.pill.danger{background:var(--berry);color:var(--white)}
 .bar{width:clamp(60px,22vw,120px);height:14px;background:var(--white);box-shadow:0 0 0 3px var(--ink)}
 .bar i{display:block;height:100%;width:100%;background:var(--leaf)}
 .bar.low i{background:var(--berry)}
+.hbtn{
+  pointer-events:auto;appearance:none;border:0;cursor:pointer;min-height:40px;min-width:44px;
+  background:var(--paper);color:var(--ink);font:700 16px var(--font-pixel);letter-spacing:1px;
+  box-shadow:0 0 0 3px var(--ink),3px 3px 0 3px var(--shade);padding:6px 10px;
+  display:flex;align-items:center;justify-content:center;
+}
+.hbtn svg{width:24px;height:24px;shape-rendering:crispEdges}
+.hbtn .x{display:none}
+.hbtn[aria-pressed="false"] .waves{display:none}
+.hbtn[aria-pressed="false"] .x{display:inline}
+.hbtn.armed{background:var(--berry);color:var(--white)}
 
 .score{font-size:clamp(64px,20vw,96px);font-weight:700;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
 .score small{display:block;font-size:24px;letter-spacing:2px;margin-top:4px}
 .record{margin:0;font-size:22px;font-weight:700;color:var(--white);background:var(--leaf);padding:4px 12px;box-shadow:0 0 0 3px var(--ink)}
 
+@media (max-height:700px){
+  .panel{gap:10px;padding-block:14px 16px}
+  .choice canvas{width:44px;height:44px}
+}
 @media (prefers-reduced-motion:reduce){
   h1,.choice[aria-pressed="true"] canvas{animation:none}
 }
@@ -118,8 +157,18 @@ button:focus-visible{outline:4px dashed var(--ink);outline-offset:8px}
 <canvas id="stage" aria-label="Igralište"></canvas>
 
 <div id="hud" hidden>
-  <div class="pill"><small>BODOVI</small><span id="hudScore">0</span></div>
-  <div class="pill"><span id="hudTime">60</span><div class="bar" id="bar"><i id="barFill"></i></div></div>
+  <div class="hud-row">
+    <div class="pill"><small>BODOVI</small><span id="hudScore">0</span></div>
+    <div class="pill" id="timePill"><span id="hudTime">60</span><div class="bar" id="bar"><i id="barFill"></i></div></div>
+    <div class="pill" id="escPill" hidden><small>POBJEGLI</small><span id="hudEsc">0/10</span></div>
+  </div>
+  <div class="hud-row tools">
+    <button class="hbtn" id="musicBtn" type="button" aria-label="Glazba" aria-pressed="true">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M1 6h3v4H1zM4 5h1v6H4zM5 4h1v8H5zM6 3h1v10H6zM7 2h1v12H7z"/><path class="waves" fill="currentColor" d="M10 6h1v4h-1zM12 4h1v8h-1zM14 2h1v12h-1z"/><path class="x" fill="currentColor" d="M10 5h1v1h-1zM14 5h1v1h-1zM11 6h1v1h-1zM13 6h1v1h-1zM12 7h1v2h-1zM11 9h1v1h-1zM13 9h1v1h-1zM10 10h1v1h-1zM14 10h1v1h-1z"/></svg>
+    </button>
+    <button class="hbtn" id="resetBtn" type="button">RESET</button>
+    <button class="hbtn" id="quitBtn" type="button">ZAVRŠI</button>
+  </div>
 </div>
 
 <section class="screen" id="menu">
@@ -127,8 +176,30 @@ button:focus-visible{outline:4px dashed var(--ink);outline-offset:8px}
     <h1>Bum-bum zoo</h1>
     <p class="lead">Koga ćemo loviti?</p>
     <div class="choices" id="choices"></div>
+    <button class="textbtn" id="changePhotoBtn" type="button" hidden>Promijeni našu sliku</button>
+    <div class="levels" role="group" aria-label="Razina">
+      <button class="level" id="level-male" data-level="male" type="button">Male<br>Legende</button>
+      <button class="level" id="level-velike" data-level="velike" type="button">Velike<br>Legende</button>
+    </div>
+    <p class="note" id="levelNote"></p>
     <button class="big" id="startBtn" type="button">START</button>
-    <p class="note" id="bestNote">Dodirni životinjicu i ona se onesvijesti!</p>
+    <p class="note" id="bestNote"></p>
+  </div>
+</section>
+
+<section class="screen" id="photo" hidden>
+  <div class="panel">
+    <h3>Naša slika</h3>
+    <canvas class="crop" id="cropCv" width="600" height="600" aria-label="Izrezivanje slike"></canvas>
+    <input class="zoom" id="zoomIn" type="range" min="1" max="6" step="0.01" value="1" aria-label="Povećanje slike">
+    <p class="note" id="cropNote">Odaberi fotografiju, pa je prstima pomakni i povećaj tako da lice bude u krugu.</p>
+    <label class="field" for="faceName">Ime <input id="faceName" type="text" maxlength="12" placeholder="npr. Tata" autocomplete="off"></label>
+    <div class="row">
+      <button class="big small alt" id="pickBtn" type="button">ODABERI FOTKU</button>
+      <button class="big small" id="saveBtn" type="button" disabled>SPREMI</button>
+    </div>
+    <button class="textbtn" id="cancelBtn" type="button">Odustani</button>
+    <input id="fileIn" type="file" accept="image/*" hidden>
   </div>
 </section>
 
@@ -138,7 +209,7 @@ button:focus-visible{outline:4px dashed var(--ink);outline-offset:8px}
 
 <section class="screen" id="end" hidden>
   <div class="panel">
-    <h2>BRAVO!</h2>
+    <h2 id="endTitle">BRAVO!</h2>
     <div class="score"><span id="endScore">0</span><small>BODOVA</small></div>
     <p class="lead" id="endHits">0 pogodaka</p>
     <p class="record" id="endRecord" hidden>NOVI REKORD!</p>
@@ -154,7 +225,13 @@ button:focus-visible{outline:4px dashed var(--ink);outline-offset:8px}
 'use strict';
 const $ = s => document.querySelector(s);
 const cv = $('#stage'), ctx = cv.getContext('2d');
-const GAME_SECONDS = 60, SPAWN_EVERY = 1.5, POINTS = 10, LIFE = 3.2;
+const GAME_SECONDS = 60, SPAWN_EVERY = 1.5, POINTS = 10, LIFE = 3.2, MAX_ESCAPES = 10;
+const INK = '#2a1b3d';
+
+const store = {
+  get(k, d){ try { const v = localStorage.getItem('bumbumzoo.' + k); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem('bumbumzoo.' + k, v); return true; } catch (e) { return false; } },
+};
 
 // ---------- Pixel sprites (eyes are 3x3 white boxes; pupils are drawn live) ----------
 const SPR = {
@@ -242,14 +319,16 @@ for (const k of KINDS) {
   sp.w = sp.rows[0].length; sp.h = sp.rows.length;
   const c = document.createElement('canvas'); c.width = sp.w; c.height = sp.h;
   const g = c.getContext('2d');
-  sp.rows.forEach((row, y) => {
-    if (row.length !== sp.w) console.warn('Sprite row width', k, y);
-    [...row].forEach((ch, x) => { const col = sp.pal[ch]; if (col) { g.fillStyle = col; g.fillRect(x, y, 1, 1); } });
-  });
+  sp.rows.forEach((row, y) => [...row].forEach((ch, x) => { const col = sp.pal[ch]; if (col) { g.fillStyle = col; g.fillRect(x, y, 1, 1); } }));
   sp.img = c;
 }
+// Our own photo: a smooth picture inside a pixel frame, 16x16 sprite units like the animals.
+SPR.face = { label: 'Naši', skin: '#f4c48e', w: 16, h: 16, isFace: true, img: null, pal: { k: INK } };
+
 const X_EYE = [[0,0],[2,0],[1,1],[0,2],[2,2]];
 const STAR = ['..y..','.yyy.','yyyyy','.yyy.','.y.y.'];
+const PLASTER = ['.kkkkkkkkkk.','kbbbpppppbbk','kbhbpppppbhk','kbbbpppppbbk','.kkkkkkkkkk.'];
+const PLASTER_PAL = { k:'#7a4b28', b:'#f4c48e', p:'#fde7c8', h:'#d9a066' };
 
 // ---------- Backgrounds ----------
 const DECO = {
@@ -270,7 +349,8 @@ const THEMES = {
   desert: { base:'#f5dd9f', specks:['#ebcf8a','#fae7b4'], decos:[['cactus',{c:'#4f9a4a'}],['pebble',{m:'#c49a5a',h:'#e0bb7d'}],['tuft',{d:'#b9a24f'}]] },
   ice:    { base:'#dff2fb', specks:['#cfe9f7','#eef9ff'], decos:[['spark',{w:'#ffffff'}],['crack',{a:'#a8d3ea'}],['mound',{w:'#ffffff',s:'#c3e2f2'}]] },
 };
-const THEME_FOR = { frog:'pond', ant:'meadow', meerkat:'desert', penguin:'ice', mix:'meadow' };
+const THEME_FOR = { frog:'pond', ant:'meadow', meerkat:'desert', penguin:'ice', mix:'meadow', face:'meadow' };
+const SEED_FOR = { frog:7, ant:8, meerkat:9, penguin:10, mix:11, face:12 };
 
 function mulberry32(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
@@ -279,7 +359,7 @@ function makeBg(){
   const th = THEMES[THEME_FOR[G.kind]];
   const cw = Math.ceil(W / U) + 1, ch = Math.ceil(H / U) + 1;
   const c = document.createElement('canvas'); c.width = cw; c.height = ch;
-  const g = c.getContext('2d'), r = mulberry32(7 + KINDS.indexOf(G.kind));
+  const g = c.getContext('2d'), r = mulberry32(SEED_FOR[G.kind]);
   g.fillStyle = th.base; g.fillRect(0, 0, cw, ch);
   for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) {
     const v = r(); if (v < 0.09) { g.fillStyle = th.specks[v < 0.045 ? 0 : 1]; g.fillRect(x, y, 1, 1); }
@@ -294,7 +374,7 @@ function makeBg(){
 }
 
 // ---------- Sound (all synthesized, no files) ----------
-let ac = null, master = null;
+let ac = null, master = null, musicBus = null, noiseBuf = null;
 function audio(){
   try {
     if (!ac) {
@@ -302,20 +382,23 @@ function audio(){
       master = ac.createGain(); master.gain.value = 0.9;
       const comp = ac.createDynamicsCompressor();
       master.connect(comp); comp.connect(ac.destination);
+      musicBus = ac.createGain(); musicBus.gain.value = 0.55; musicBus.connect(master);
+      noiseBuf = ac.createBuffer(1, Math.floor(ac.sampleRate * 0.05), ac.sampleRate);
+      const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     }
     if (ac.state === 'suspended') ac.resume();
   } catch (e) { ac = null; }
 }
 function tone(o){
   if (!ac) return;
-  const t = ac.currentTime + (o.at || 0), dur = o.dur;
+  const t = o.when != null ? o.when : ac.currentTime + (o.at || 0), dur = o.dur;
   const osc = ac.createOscillator(), g = ac.createGain();
   osc.type = o.type || 'sine';
   osc.frequency.setValueAtTime(o.f0, t);
   if (o.f1) osc.frequency.exponentialRampToValueAtTime(o.f1, t + dur);
   let node = osc;
   if (o.lp) { const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = o.lp; node.connect(f); node = f; }
-  node.connect(g); g.connect(master);
+  node.connect(g); g.connect(o.bus || master);
   const v = o.vol == null ? 0.25 : o.vol;
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(v, t + 0.012);
@@ -327,6 +410,54 @@ function tone(o){
     l.connect(lg); lg.connect(osc.frequency); l.start(t); l.stop(t + dur + 0.05);
   }
   osc.start(t); osc.stop(t + dur + 0.05);
+}
+// Cartoon "jaaaoooo": a buzzy voice through two moving formant filters (j -> a -> o) with a falling pitch.
+function sfxJao(m){
+  const t = ac.currentTime + 0.08, d = 1.15;
+  const src = ac.createOscillator(); src.type = 'sawtooth';
+  src.frequency.setValueAtTime(380 * m, t);
+  src.frequency.linearRampToValueAtTime(480 * m, t + 0.14);
+  src.frequency.exponentialRampToValueAtTime(220 * m, t + d);
+  const lfo = ac.createOscillator(), lg = ac.createGain();
+  lfo.frequency.value = 6.5; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(14 * m, t + 0.4);
+  lfo.connect(lg); lg.connect(src.frequency);
+  const out = ac.createGain();
+  out.gain.setValueAtTime(0.0001, t);
+  out.gain.exponentialRampToValueAtTime(1.4, t + 0.05);
+  out.gain.setValueAtTime(1.4, t + d * 0.7);
+  out.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  out.connect(master);
+  [[300, 800, 480, 6, 1], [2300, 1250, 850, 8, 0.6]].forEach(([fj, fa, fo, q, gain]) => {
+    const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = q;
+    f.frequency.setValueAtTime(fj, t);
+    f.frequency.linearRampToValueAtTime(fa, t + 0.1);
+    f.frequency.setValueAtTime(fa, t + 0.45);
+    f.frequency.linearRampToValueAtTime(fo, t + 0.75);
+    const g = ac.createGain(); g.gain.value = gain;
+    src.connect(f); f.connect(g); g.connect(out);
+  });
+  src.start(t); lfo.start(t); src.stop(t + d + 0.05); lfo.stop(t + d + 0.05);
+}
+// "Beeeelj": a long falling raspberry for losing in Velike Legende.
+function sfxBelj(){
+  if (!ac) return;
+  const t = ac.currentTime + 0.05, d = 1.4;
+  const out = ac.createGain(), lp = ac.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = 1300;
+  out.gain.setValueAtTime(0.0001, t);
+  out.gain.exponentialRampToValueAtTime(0.3, t + 0.05);
+  out.gain.setValueAtTime(0.3, t + d * 0.75);
+  out.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  const trem = ac.createOscillator(), tg = ac.createGain();
+  trem.frequency.value = 23; tg.gain.value = 0.18; trem.connect(tg); tg.connect(out.gain);
+  [1, 1.015].forEach(det => {
+    const o = ac.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(220 * det, t);
+    o.frequency.exponentialRampToValueAtTime(70 * det, t + d);
+    o.connect(lp); o.start(t); o.stop(t + d + 0.05);
+  });
+  lp.connect(out); out.connect(master);
+  trem.start(t); trem.stop(t + d + 0.05);
 }
 const VOICES = {
   frog: m => {
@@ -346,24 +477,65 @@ const VOICES = {
     tone({type:'sawtooth', f0:340*m, f1:270*m, dur:.26, lp:1400, vib:[9,14], vol:.2, at:.08});
     tone({type:'sawtooth', f0:390*m, f1:300*m, dur:.22, lp:1400, vib:[9,14], vol:.2, at:.38});
   },
+  face: m => sfxJao(m),
 };
 function sfxHit(kind){
   if (!ac) return;
   const m = 0.9 + Math.random() * 0.25;
-  tone({type:'triangle', f0:560*m, f1:110*m, dur:.13, vol:.35});           // bonk
-  VOICES[kind](m);                                                           // animal voice
-  tone({f0:1300*m, f1:340*m, dur:.6, vib:[7,45], vol:.12, at:.62});          // dizzy slide whistle
+  tone({type:'triangle', f0:560*m, f1:110*m, dur:.13, vol:.35});                       // bonk
+  VOICES[kind](m);                                                                       // voice
+  if (kind !== 'face') tone({f0:1300*m, f1:340*m, dur:.6, vib:[7,45], vol:.12, at:.62}); // dizzy slide whistle
 }
 const sfxPop  = () => tone({f0:300, f1:700, dur:.07, vol:.06});
+const sfxFiu  = () => tone({f0:900, f1:300, dur:.18, vol:.08});
 const sfxBeep = f => tone({type:'square', f0:f, dur:.16, vol:.13});
-const sfxGo   = () => { tone({type:'square', f0:784, f1:1046, dur:.35, vol:.14}); };
+const sfxGo   = () => tone({type:'square', f0:784, f1:1046, dur:.35, vol:.14});
 const sfxFanfare = () => [523,659,784,1046].forEach((f,i) => tone({type:'square', f0:f, dur:i === 3 ? .5 : .14, vol:.12, at:i*.13}));
 
+// ---------- 8-bit music: 64 eighth-note steps, tempo follows the game speed ----------
+const LEAD = [
+  72,76,79,76, 84,79,76,79,  77,81,84,81, 77,81,79,77,
+  79,83,86,83, 79,77,76,74,  76,79,72,76, 79,0,84,0,
+  81,0,81,79, 76,79,81,84,   84,0,81,0, 77,79,81,77,
+  79,79,83,79, 86,84,83,81,  84,0,79,0, 72,0,0,0,
+];
+const ROOTS = [36,41,43,36,45,41,43,36];
+const midi = n => 440 * Math.pow(2, (n - 69) / 12);
+const MUSIC_BPM = 150;
+const mus = { on: store.get('music', '1') === '1', playing: false, step: 0, next: 0, timer: null };
+function musicTempo(){ return MUSIC_BPM * (1 + (G.speed - 1) * 0.5); }
+function musicStart(){
+  if (!ac) return;
+  mus.playing = true; mus.step = 0; mus.next = ac.currentTime + 0.08;
+  if (!mus.timer) mus.timer = setInterval(musicTick, 25);
+}
+function musicStop(){ mus.playing = false; clearInterval(mus.timer); mus.timer = null; }
+function musicTick(){
+  if (!mus.playing || !mus.on || !ac) return;
+  const stepDur = 60 / musicTempo() / 2;
+  if (mus.next < ac.currentTime) mus.next = ac.currentTime + 0.03;
+  while (mus.next < ac.currentTime + 0.12) {
+    const i = mus.step, t = mus.next, root = ROOTS[Math.floor(i / 8)];
+    if (LEAD[i]) tone({type:'square', f0:midi(LEAD[i]), dur:stepDur * .85, vol:.07, when:t, bus:musicBus});
+    tone({type:'triangle', f0:midi(i % 2 ? root + 12 : root), dur:stepDur * .8, vol:.16, when:t, bus:musicBus});
+    if (i % 4 === 0) tone({f0:150, f1:45, dur:.12, vol:.3, when:t, bus:musicBus});
+    if (i % 2 === 1) {
+      const n = ac.createBufferSource(), hp = ac.createBiquadFilter(), g = ac.createGain();
+      n.buffer = noiseBuf; hp.type = 'highpass'; hp.frequency.value = 6000; g.gain.value = .07;
+      n.connect(hp); hp.connect(g); g.connect(musicBus); n.start(t);
+    }
+    mus.next += stepDur; mus.step = (i + 1) % LEAD.length;
+  }
+}
+
 // ---------- State ----------
-const G = { mode:'menu', kind:'frog', score:0, hits:0, time:GAME_SECONDS, spawnIn:0, animals:[], fx:[] };
-try { const k = localStorage.getItem('bumbumzoo.kind'); if (k && (k === 'mix' || SPR[k])) G.kind = k; } catch (e) {}
-let best = 0;
-try { best = parseInt(localStorage.getItem('bumbumzoo.best') || '0', 10) || 0; } catch (e) {}
+const G = { mode:'menu', kind:'frog', level:'male', score:0, hits:0, escaped:0, speed:1,
+  time:GAME_SECONDS, spawnIn:0, animals:[], fx:[], timers:[], endReason:'time' };
+G.level = store.get('level', 'male') === 'velike' ? 'velike' : 'male';
+const storedKind = store.get('kind', 'frog');
+if (storedKind === 'mix' || SPR[storedKind]) G.kind = storedKind;
+const bestKey = () => G.level === 'velike' ? 'best.velike' : 'best';
+const getBest = () => parseInt(store.get(bestKey(), '0'), 10) || 0;
 
 let W = 0, H = 0, DPR = 1, U = 6;
 function resize(){
@@ -378,11 +550,16 @@ function resize(){
 // ---------- Animals ----------
 function bounds(sp){
   const w = sp.w * U, h = sp.h * U;
-  const hud = $('#hud'); const top = hud.hidden ? 80 : hud.getBoundingClientRect().bottom;
+  const hud = $('#hud'); const top = hud.hidden ? 130 : hud.getBoundingClientRect().bottom;
   return { x0: w/2 + 12, x1: W - w/2 - 12, y0: top + h + U * 6, y1: H - U * 3 - 8, w, h };
 }
+function kindPool(){
+  if (G.kind === 'face') return ['face'];
+  if (G.kind === 'mix') return SPR.face.img ? [...KINDS, 'face', 'face'] : KINDS;
+  return [G.kind];
+}
 function spawn(){
-  const kind = G.kind === 'mix' ? KINDS[Math.floor(Math.random() * 4)] : G.kind;
+  const pool = kindPool(), kind = pool[Math.floor(Math.random() * pool.length)];
   const sp = SPR[kind], b = bounds(sp);
   const live = G.animals.filter(a => a.state !== 'leave');
   let pos = null;
@@ -392,7 +569,7 @@ function spawn(){
     if (live.every(a => Math.abs(a.x - x) > b.w * 1.15 || Math.abs(a.y - y) > b.h * 1.2)) pos = [x, y];
   }
   if (!pos) return;
-  G.animals.push({ kind, x:pos[0], y:pos[1], state:'pop', st:0, age:0, life:LIFE, phase:Math.random()*6,
+  G.animals.push({ kind, x:pos[0], y:pos[1], state:'pop', st:0, age:0, life:Math.max(1.1, LIFE / G.speed), phase:Math.random()*6,
     lx:Math.random()<.5?0:1, ly:1, look:.4, blink:0, nextBlink:1 + Math.random()*2 });
   sfxPop();
 }
@@ -400,7 +577,7 @@ function setState(a, s){ a.state = s; a.st = 0; }
 function stepAnimal(a, dt){
   a.age += dt; a.st += dt;
   if (a.state === 'pop' && a.st >= .3) setState(a, 'idle');
-  else if (a.state === 'idle' && a.st >= a.life) setState(a, 'leave');
+  else if (a.state === 'idle' && a.st >= a.life) { setState(a, 'leave'); if (G.mode === 'play') escaped(); }
   else if (a.state === 'leave' && a.st >= .3) a.dead = true;
   else if (a.state === 'dizzy' && a.st >= 2) { a.dead = true; poof(a); }
   a.look -= dt;
@@ -408,9 +585,15 @@ function stepAnimal(a, dt){
   if (a.blink > 0) a.blink -= dt;
   else if ((a.nextBlink -= dt) <= 0) { a.blink = .12; a.nextBlink = 1.5 + Math.random() * 2.5; }
 }
+function escaped(){
+  if (G.level !== 'velike') return;
+  G.escaped++; sfxFiu(); updateHud();
+  if (G.escaped >= MAX_ESCAPES) finish('lost');
+}
 function hit(a){
   setState(a, 'dizzy');
   G.score += POINTS; G.hits++;
+  if (G.level === 'velike') G.speed = Math.min(3, 1 + G.hits * 0.05);
   sfxHit(a.kind);
   try { navigator.vibrate && navigator.vibrate(25); } catch (e) {}
   const sp = SPR[a.kind];
@@ -432,8 +615,12 @@ function confetti(){
 
 // ---------- Drawing ----------
 const easeOutBack = p => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
-function drawPattern(c, pat, ox, oy){
-  pat.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') c.fillRect(ox + x, oy + y, 1, 1); }));
+function drawPattern(c, pat, ox, oy, pal){
+  pat.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === '.') return;
+    if (pal) c.fillStyle = pal[ch];
+    c.fillRect(ox + x, oy + y, 1, 1);
+  }));
 }
 function drawEyes(c, sp, a){
   for (const [ex, ey] of sp.eyes) {
@@ -459,8 +646,16 @@ function drawStars(c, sp, a, front){
     c.fillStyle = '#ffd93b'; drawPattern(c, STAR, x, y);
   }
 }
+function drawPlaster(c, a){
+  const k = Math.min(1, a.st / .15);
+  c.save();
+  c.translate(8, 3.6); c.rotate(-0.35); c.scale(k, k);
+  drawPattern(c, PLASTER, -6, -2.5, PLASTER_PAL);
+  c.restore();
+}
 function drawAnimal(a){
   const sp = SPR[a.kind];
+  if (!sp.img) return;
   let sx = 1, sy = 1, rot = 0, yoff = 0, alpha = 1;
   if (a.state === 'pop') { sx = sy = Math.max(0.01, easeOutBack(Math.min(1, a.st / .3))); }
   else if (a.state === 'idle') { yoff = -Math.max(0, Math.sin(a.age * 4 + a.phase)) * U * 1.2; }
@@ -480,8 +675,15 @@ function drawAnimal(a){
   ctx.scale(U * sx, U * sy);
   ctx.translate(-sp.w / 2, -sp.h);
   if (a.state === 'dizzy') drawStars(ctx, sp, a, false);
-  ctx.drawImage(sp.img, 0, 0);
-  drawEyes(ctx, sp, a);
+  if (sp.isFace) {
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(sp.img, 0, 0, sp.w, sp.h);
+    ctx.imageSmoothingEnabled = false;
+    if (a.state === 'dizzy') drawPlaster(ctx, a);
+  } else {
+    ctx.drawImage(sp.img, 0, 0);
+    drawEyes(ctx, sp, a);
+  }
   if (a.state === 'dizzy') drawStars(ctx, sp, a, true);
   ctx.restore();
 }
@@ -494,7 +696,7 @@ function drawFx(f){
     ctx.translate(f.x, f.y - f.t * 50); ctx.scale(k, k);
     ctx.font = `700 ${Math.round(U * 8)}px "Pixelify Sans", "Courier New", monospace`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.lineJoin = 'round'; ctx.lineWidth = U * 1.4; ctx.strokeStyle = '#2a1b3d';
+    ctx.lineJoin = 'round'; ctx.lineWidth = U * 1.4; ctx.strokeStyle = INK;
     ctx.strokeText(f.text, 0, 0); ctx.fillStyle = '#ffcf3f'; ctx.fillText(f.text, 0, 0);
   } else if (f.type === 'part') {
     ctx.globalAlpha = 1 - p; ctx.fillStyle = f.color;
@@ -518,13 +720,21 @@ function render(){
 }
 
 // ---------- HUD ----------
-const hudScore = $('#hudScore'), hudTime = $('#hudTime'), barFill = $('#barFill'), bar = $('#bar');
+const hud = $('#hud'), hudScore = $('#hudScore'), hudTime = $('#hudTime'), barFill = $('#barFill'), bar = $('#bar');
+const timePill = $('#timePill'), escPill = $('#escPill'), hudEsc = $('#hudEsc');
 let shownScore = -1, shownTime = -1;
 function updateHud(){
-  const t = Math.ceil(G.time);
+  const velike = G.level === 'velike';
+  timePill.hidden = velike; escPill.hidden = !velike;
   if (G.score !== shownScore) { hudScore.textContent = G.score; shownScore = G.score; }
-  if (t !== shownTime) { hudTime.textContent = t; shownTime = t; bar.classList.toggle('low', t <= 10); }
-  barFill.style.width = (G.time / GAME_SECONDS * 100).toFixed(1) + '%';
+  if (velike) {
+    hudEsc.textContent = `${G.escaped}/${MAX_ESCAPES}`;
+    escPill.classList.toggle('danger', G.escaped >= MAX_ESCAPES - 3);
+  } else {
+    const t = Math.ceil(G.time);
+    if (t !== shownTime) { hudTime.textContent = t; shownTime = t; bar.classList.toggle('low', t <= 10); }
+    barFill.style.width = (G.time / GAME_SECONDS * 100).toFixed(1) + '%';
+  }
 }
 
 // ---------- Loop ----------
@@ -532,17 +742,19 @@ let last = performance.now();
 function frame(now){
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   if (G.mode === 'play') {
-    G.time -= dt; G.spawnIn -= dt;
-    if (G.spawnIn <= 0) { spawn(); G.spawnIn += SPAWN_EVERY; }
-    if (G.time <= 0) { G.time = 0; finish(); }
+    G.spawnIn -= dt;
+    if (G.spawnIn <= 0) { spawn(); G.spawnIn += SPAWN_EVERY / G.speed; }
+    if (G.level === 'male') {
+      G.time -= dt;
+      if (G.time <= 0) { G.time = 0; finish('time'); }
+    }
     updateHud();
   }
   for (const a of G.animals) stepAnimal(a, dt);
   G.animals = G.animals.filter(a => !a.dead);
   for (const f of G.fx) {
     f.t += dt;
-    if (f.type === 'part') { f.x += f.vx * dt; f.y += f.vy * dt; }
-    if (f.type === 'conf') { f.x += f.vx * dt; f.y += f.vy * dt; }
+    if (f.type === 'part' || f.type === 'conf') { f.x += f.vx * dt; f.y += f.vy * dt; }
   }
   G.fx = G.fx.filter(f => f.t < f.life);
   render();
@@ -567,12 +779,23 @@ cv.addEventListener('pointerdown', e => {
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('dblclick', e => e.preventDefault());
 
-// ---------- Screens ----------
-const menu = $('#menu'), count = $('#count'), end = $('#end'), hud = $('#hud'), countNum = $('#countNum');
+// ---------- Menu ----------
+const menu = $('#menu'), count = $('#count'), end = $('#end'), photo = $('#photo'), countNum = $('#countNum');
+const choices = $('#choices'), changePhotoBtn = $('#changePhotoBtn');
 function iconCanvas(kind){
   const c = document.createElement('canvas');
   const fake = { state:'idle', blink:0, lx:1, ly:1 };
-  if (kind === 'mix') {
+  if (kind === 'face') {
+    c.width = c.height = 64; c.className = 'smooth';
+    const g = c.getContext('2d');
+    if (SPR.face.img) { g.imageSmoothingQuality = 'high'; g.drawImage(SPR.face.img, 0, 0, 64, 64); }
+    else {
+      // Pixel "+" invites adding a photo.
+      g.fillStyle = INK; g.fillRect(8, 8, 48, 48);
+      g.fillStyle = '#fff4d1'; g.fillRect(12, 12, 40, 40);
+      g.fillStyle = '#ff5d8f'; g.fillRect(28, 18, 8, 28); g.fillRect(18, 28, 28, 8);
+    }
+  } else if (kind === 'mix') {
     c.width = 32; c.height = 32; const g = c.getContext('2d');
     KINDS.forEach((k, i) => {
       const sp = SPR[k], ox = (i % 2) * 16, oy = Math.floor(i / 2) * 16 + 16 - sp.h;
@@ -584,63 +807,247 @@ function iconCanvas(kind){
   }
   return c;
 }
-const choices = $('#choices');
-[...KINDS, 'mix'].forEach(k => {
-  const b = document.createElement('button');
-  b.type = 'button'; b.className = 'choice'; b.id = 'choice-' + k; b.dataset.kind = k;
-  b.append(iconCanvas(k), Object.assign(document.createElement('span'), { textContent: k === 'mix' ? 'Sve' : SPR[k].label }));
-  b.addEventListener('click', () => { audio(); G.kind = k; try { localStorage.setItem('bumbumzoo.kind', k); } catch (e) {} markChoice(); makeBg(); if (k !== 'mix') VOICES[k](1); else sfxPop(); });
-  choices.append(b);
-});
-function markChoice(){ choices.querySelectorAll('.choice').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.kind === G.kind))); }
-function showBest(){ $('#bestNote').textContent = best > 0 ? `Najbolji rezultat: ${best} bodova` : 'Dodirni životinjicu i ona se onesvijesti!'; }
+function buildChoices(){
+  choices.textContent = '';
+  [...KINDS, 'mix', 'face'].forEach(k => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'choice'; b.id = 'choice-' + k; b.dataset.kind = k;
+    const label = k === 'mix' ? 'Sve' : SPR[k].label;
+    b.append(iconCanvas(k), Object.assign(document.createElement('span'), { textContent: label }));
+    b.addEventListener('click', () => {
+      audio();
+      if (k === 'face' && !SPR.face.img) { openPhoto(true); return; }
+      G.kind = k; store.set('kind', k); refreshMenu(); makeBg();
+      if (k === 'mix') sfxPop(); else VOICES[k](1);
+    });
+    choices.append(b);
+  });
+}
+const LEVEL_NOTES = {
+  male: '1 minuta, uvijek isti tempo.',
+  velike: 'Svakim pogotkom sve brže! Ako pobjegne 10 likova, kraj.',
+};
+function refreshMenu(){
+  choices.querySelectorAll('.choice').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.kind === G.kind)));
+  document.querySelectorAll('.level').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.level === G.level)));
+  $('#levelNote').textContent = LEVEL_NOTES[G.level];
+  changePhotoBtn.hidden = !SPR.face.img;
+  const best = getBest();
+  $('#bestNote').textContent = best > 0 ? `Najbolji rezultat: ${best} bodova` : 'Dodirni lika i on se onesvijesti!';
+}
+document.querySelectorAll('.level').forEach(b => b.addEventListener('click', () => {
+  G.level = b.dataset.level; store.set('level', G.level); refreshMenu();
+}));
+changePhotoBtn.addEventListener('click', () => openPhoto(false));
 
+// ---------- Our photo: pick, crop in a circle, save one picture on this phone ----------
+const cropCv = $('#cropCv'), cctx = cropCv.getContext('2d'), zoomIn = $('#zoomIn'), fileIn = $('#fileIn');
+const saveBtn = $('#saveBtn'), faceName = $('#faceName'), cropNote = $('#cropNote');
+const C = cropCv.width, CX = C / 2, CY = C / 2, R = C * 0.4;
+const crop = { img:null, s:1, min:1, ox:0, oy:0, ptrs:new Map(), prev:null };
+
+function loadFace(){
+  const data = store.get('face', '');
+  SPR.face.label = store.get('faceName', '') || 'Naši';
+  if (!data) return;
+  const im = new Image();
+  im.onload = () => { SPR.face.img = im; buildChoices(); refreshMenu(); };
+  im.src = data;
+}
+function openPhoto(pickNow){
+  crop.img = null; saveBtn.disabled = !SPR.face.img;
+  faceName.value = store.get('faceName', '');
+  zoomIn.value = 1; drawCrop();
+  menu.hidden = true; photo.hidden = false;
+  if (pickNow) fileIn.click();
+}
+function closePhoto(){ photo.hidden = true; menu.hidden = false; refreshMenu(); }
+fileIn.addEventListener('change', () => {
+  const f = fileIn.files && fileIn.files[0]; fileIn.value = '';
+  if (!f) return;
+  const url = URL.createObjectURL(f), im = new Image();
+  im.onload = () => {
+    crop.img = im;
+    crop.min = 2 * R / Math.min(im.naturalWidth, im.naturalHeight);
+    crop.s = crop.min * (C / (2 * R));
+    crop.ox = CX - im.naturalWidth * crop.s / 2; crop.oy = CY - im.naturalHeight * crop.s / 2;
+    clampCrop(); zoomIn.value = crop.s / crop.min; drawCrop();
+    saveBtn.disabled = false;
+    cropNote.textContent = 'Pomakni i povećaj sliku prstima tako da lice bude u krugu.';
+    URL.revokeObjectURL(url);
+  };
+  im.onerror = () => { cropNote.textContent = 'Ova slika se ne može otvoriti. Odaberi drugu fotografiju.'; URL.revokeObjectURL(url); };
+  im.src = url;
+});
+function clampCrop(){
+  const w = crop.img.naturalWidth * crop.s, h = crop.img.naturalHeight * crop.s;
+  crop.ox = Math.min(CX - R, Math.max(CX + R - w, crop.ox));
+  crop.oy = Math.min(CY - R, Math.max(CY + R - h, crop.oy));
+}
+function zoomAbout(newS, px, py){
+  newS = Math.min(crop.min * 6, Math.max(crop.min, newS));
+  crop.ox = px - (px - crop.ox) * (newS / crop.s);
+  crop.oy = py - (py - crop.oy) * (newS / crop.s);
+  crop.s = newS; clampCrop();
+}
+function drawCrop(){
+  cctx.fillStyle = INK; cctx.fillRect(0, 0, C, C);
+  if (!crop.img) {
+    cctx.fillStyle = '#fff4d1'; cctx.font = '700 40px "Pixelify Sans", monospace'; cctx.textAlign = 'center';
+    if (SPR.face.img) {
+      cctx.imageSmoothingEnabled = true; cctx.drawImage(SPR.face.img, CX - R, CY - R, 2 * R, 2 * R);
+    } else cctx.fillText('Nema slike', CX, CY + 14);
+    return;
+  }
+  cctx.imageSmoothingEnabled = true; cctx.imageSmoothingQuality = 'high';
+  cctx.drawImage(crop.img, crop.ox, crop.oy, crop.img.naturalWidth * crop.s, crop.img.naturalHeight * crop.s);
+  cctx.fillStyle = 'rgba(42,27,61,.62)';
+  cctx.beginPath(); cctx.rect(0, 0, C, C); cctx.arc(CX, CY, R, 0, Math.PI * 2, true); cctx.fill();
+  cctx.lineWidth = 6; cctx.strokeStyle = '#ffcf3f'; cctx.setLineDash([18, 12]);
+  cctx.beginPath(); cctx.arc(CX, CY, R, 0, Math.PI * 2); cctx.stroke(); cctx.setLineDash([]);
+}
+function cropPoint(e){ const r = cropCv.getBoundingClientRect(); return { x:(e.clientX - r.left) * C / r.width, y:(e.clientY - r.top) * C / r.height }; }
+function pinchState(){
+  const p = [...crop.ptrs.values()];
+  if (p.length < 2) return { mx:p[0].x, my:p[0].y, d:0 };
+  return { mx:(p[0].x + p[1].x) / 2, my:(p[0].y + p[1].y) / 2, d:Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) };
+}
+cropCv.addEventListener('pointerdown', e => {
+  if (!crop.img) return;
+  cropCv.setPointerCapture(e.pointerId);
+  crop.ptrs.set(e.pointerId, cropPoint(e)); crop.prev = pinchState();
+});
+cropCv.addEventListener('pointermove', e => {
+  if (!crop.ptrs.has(e.pointerId)) return;
+  crop.ptrs.set(e.pointerId, cropPoint(e));
+  const now = pinchState(), prev = crop.prev;
+  if (prev.d && now.d) zoomAbout(crop.s * now.d / prev.d, now.mx, now.my);
+  crop.ox += now.mx - prev.mx; crop.oy += now.my - prev.my; clampCrop();
+  crop.prev = now; zoomIn.value = crop.s / crop.min; drawCrop();
+});
+['pointerup','pointercancel'].forEach(t => cropCv.addEventListener(t, e => {
+  crop.ptrs.delete(e.pointerId); crop.prev = crop.ptrs.size ? pinchState() : null;
+}));
+cropCv.addEventListener('wheel', e => { if (!crop.img) return; e.preventDefault(); const p = cropPoint(e); zoomAbout(crop.s * (e.deltaY < 0 ? 1.1 : 0.9), p.x, p.y); zoomIn.value = crop.s / crop.min; drawCrop(); }, { passive:false });
+zoomIn.addEventListener('input', () => { if (!crop.img) return; zoomAbout(crop.min * parseFloat(zoomIn.value), CX, CY); drawCrop(); });
+
+// The saved picture: 32x32 grid of 8px cells; photo inside a stepped pixel circle, thick ink frame around it.
+function buildFace(){
+  const N = 32, CELL = 8, S = N * CELL, INNER = 13.2, OUTER = 15.6;
+  const out = document.createElement('canvas'); out.width = out.height = S;
+  const g = out.getContext('2d');
+  const dist = (x, y) => Math.hypot(x + .5 - N / 2, y + .5 - N / 2);
+  const span = R * (N / 2) / INNER;                     // crop circle maps onto the inner photo area
+  const sx = (CX - span - crop.ox) / crop.s, sy = (CY - span - crop.oy) / crop.s, sw = 2 * span / crop.s;
+  g.save(); g.beginPath();
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (dist(x, y) < INNER) g.rect(x * CELL, y * CELL, CELL, CELL);
+  g.clip(); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  g.drawImage(crop.img, sx, sy, sw, sw, 0, 0, S, S);
+  g.restore();
+  g.fillStyle = INK;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const d = dist(x, y); if (d >= INNER && d < OUTER) g.fillRect(x * CELL, y * CELL, CELL, CELL); }
+  return out;
+}
+saveBtn.addEventListener('click', () => {
+  const name = faceName.value.trim().slice(0, 12);
+  store.set('faceName', name); SPR.face.label = name || 'Naši';
+  if (crop.img) {
+    const c = buildFace();
+    let data = c.toDataURL('image/webp', 0.9);
+    if (!data.startsWith('data:image/webp')) data = c.toDataURL('image/png');
+    if (!store.set('face', data)) { cropNote.textContent = 'Slika se nije spremila. Probaj ponovno ili odaberi manju sliku.'; return; }
+    SPR.face.img = c;
+  }
+  G.kind = 'face'; store.set('kind', 'face');
+  buildChoices(); makeBg(); closePhoto();
+});
+$('#pickBtn').addEventListener('click', () => fileIn.click());
+$('#cancelBtn').addEventListener('click', closePhoto);
+
+// ---------- Game flow ----------
 let wake = null;
 async function keepAwake(){ try { if ('wakeLock' in navigator) wake = await navigator.wakeLock.request('screen'); } catch (e) {} }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && G.mode !== 'menu') keepAwake(); });
+document.addEventListener('visibilitychange', () => {
+  if (!ac) return;
+  if (document.visibilityState === 'hidden') ac.suspend();
+  else { ac.resume(); if (G.mode !== 'menu') keepAwake(); }
+});
+function later(fn, ms){ G.timers.push(setTimeout(fn, ms)); }
+function clearTimers(){ G.timers.forEach(clearTimeout); G.timers = []; }
 
 function startGame(){
-  audio(); keepAwake();
+  audio(); keepAwake(); clearTimers(); musicStop();
   try { const el = document.documentElement; if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen({ navigationUI:'hide' }).catch(() => {}); } catch (e) {}
   menu.hidden = true; end.hidden = true;
-  G.animals = []; G.fx = []; G.score = 0; G.hits = 0; G.time = GAME_SECONDS;
+  G.animals = []; G.fx = []; G.score = 0; G.hits = 0; G.escaped = 0; G.speed = 1; G.time = GAME_SECONDS;
   makeBg();
   hud.hidden = false; shownScore = shownTime = -1; updateHud();
   G.mode = 'count'; count.hidden = false;
   const steps = ['1','2','3','KRENI!'], freqs = [523, 587, 659];
-  steps.forEach((s, i) => setTimeout(() => {
+  steps.forEach((s, i) => later(() => {
     countNum.textContent = s;
     countNum.classList.toggle('go', i === 3);
     countNum.classList.remove('pop'); void countNum.offsetWidth; countNum.classList.add('pop');
     if (i < 3) sfxBeep(freqs[i]); else sfxGo();
   }, i * 1000));
-  setTimeout(() => { count.hidden = true; G.mode = 'play'; G.spawnIn = 0; }, 3700);
+  later(() => { count.hidden = true; G.mode = 'play'; G.spawnIn = 0; musicStart(); }, 3700);
 }
 function plural(n, one, few, many){ const a = n % 10, b = n % 100; if (a === 1 && b !== 11) return one; if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return few; return many; }
-function finish(){
-  G.mode = 'over';
+function finish(reason){
+  if (G.mode !== 'play' && G.mode !== 'count') return;
+  clearTimers(); musicStop(); count.hidden = true;
+  G.mode = 'over'; G.endReason = reason;
   for (const a of G.animals) if (a.state !== 'dizzy') setState(a, 'leave');
-  setTimeout(showEnd, 900);
+  later(showEnd, reason === 'quit' ? 250 : 900);
 }
 function showEnd(){
-  const isRecord = G.score > best;
-  if (isRecord) { best = G.score; try { localStorage.setItem('bumbumzoo.best', String(best)); } catch (e) {} }
+  const best = getBest(), isRecord = G.score > best;
+  if (isRecord) store.set(bestKey(), String(G.score));
+  const lost = G.endReason === 'lost';
+  const title = $('#endTitle');
+  title.textContent = lost ? 'GOTOV SI LEGENDO!' : 'BRAVO!';
+  title.classList.toggle('long', lost);
   $('#endScore').textContent = G.score;
   $('#endHits').textContent = `${G.hits} ${plural(G.hits, 'pogodak', 'pogotka', 'pogodaka')}`;
   $('#endRecord').hidden = !isRecord || G.score === 0;
   hud.hidden = true; end.hidden = false; G.mode = 'end';
-  sfxFanfare(); confetti();
+  if (lost) sfxBelj(); else sfxFanfare();
+  confetti();
   // Short lock so a toddler's leftover taps don't restart straight away.
   const btns = end.querySelectorAll('button'); btns.forEach(b => b.disabled = true);
-  setTimeout(() => btns.forEach(b => b.disabled = false), 1500);
+  later(() => btns.forEach(b => b.disabled = false), 1500);
 }
+
+// Reset and Završi need two taps, so a stray toddler tap doesn't end the game.
+function confirmTap(btn, action){
+  const label = btn.textContent; let tid = 0;
+  const disarm = () => { clearTimeout(tid); tid = 0; btn.textContent = label; btn.classList.remove('armed'); };
+  btn.addEventListener('click', () => {
+    if (tid) { disarm(); action(); return; }
+    btn.textContent = 'SIGURNO?'; btn.classList.add('armed');
+    tid = setTimeout(disarm, 2500);
+  });
+}
+confirmTap($('#resetBtn'), startGame);
+confirmTap($('#quitBtn'), () => finish('quit'));
+const musicBtn = $('#musicBtn');
+function setMusic(on){
+  mus.on = on; store.set('music', on ? '1' : '0');
+  musicBtn.setAttribute('aria-pressed', String(on));
+  musicBtn.setAttribute('aria-label', on ? 'Ugasi glazbu' : 'Upali glazbu');
+  if (musicBus) musicBus.gain.value = on ? 0.55 : 0;
+  if (on && ac) mus.next = ac.currentTime + 0.05;
+}
+musicBtn.addEventListener('click', () => setMusic(!mus.on));
+
 $('#startBtn').addEventListener('click', startGame);
 $('#againBtn').addEventListener('click', startGame);
-$('#menuBtn').addEventListener('click', () => { end.hidden = true; menu.hidden = false; G.mode = 'menu'; G.fx = []; showBest(); });
+$('#menuBtn').addEventListener('click', () => { end.hidden = true; menu.hidden = false; G.mode = 'menu'; G.fx = []; G.animals = []; refreshMenu(); });
 
 // ---------- Boot ----------
 window.addEventListener('resize', resize);
-resize(); markChoice(); showBest();
+if (G.kind === 'face' && !store.get('face', '')) G.kind = 'frog';
+loadFace(); buildChoices(); resize(); refreshMenu(); setMusic(mus.on);
 if (document.fonts && document.fonts.load) document.fonts.load('700 20px "Pixelify Sans"').catch(() => {});
 requestAnimationFrame(frame);
 
